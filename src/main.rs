@@ -26,7 +26,7 @@ impl SimpleBond {
     }
 
     // Still need to handle non-convergence. Newton Method comes from here: https://en.wikipedia.org/wiki/Newton%27s_method#Code
-    fn yield_to_maturity(&mut self, mut x0: f32, iter: i32, tolerance: f32, epsilon: f32) -> f32 {
+    fn solve_yield_to_maturity(&mut self, mut x0: f32, iter: i32, tolerance: f32, epsilon: f32) -> f32 {
         let max_iter: i32 = iter;
         let coupon_periods = self.frequency * self.maturity;
 
@@ -60,6 +60,34 @@ impl SimpleBond {
 
         self.yield_to_maturity
     }
+
+    // this doesn't handle the case where we've given the yield to maturity of a bond, but not the correct price
+    fn current_yield(&self) -> f32 {
+        let current_yield = (self.face_value * self.coupon) / self.price * 100.0;
+        current_yield
+    }
+
+    // using the explicit formula for duration here, as given in Luenberger
+    fn macauly_duration(&self) -> f32 {
+        let n = self.maturity * self.frequency;
+        let c = self.coupon / 2.0;
+        let y = self.yield_to_maturity / 2.0;
+        let duration = (1.0 + y) / (self.frequency * y)
+            - (1.0 + y + (n * (c - y)))
+            / (self.frequency * c * ((1.0 + y).powf(n) - 1.0) + self.frequency * y);
+        duration
+    }
+
+    fn modified_duration(&self) -> f32 {
+        let modified = self.macauly_duration() / (1.0 + (self.yield_to_maturity / self.frequency));
+        modified
+    }
+
+    fn price_sensitivity(&self, old_yield: f32, new_yield: f32) -> f32 {
+        let yield_change = new_yield - old_yield;
+        let derivative = -1.0 * self.modified_duration() * self.price;
+        derivative * yield_change
+    }
 }
 
 // We could set defaults as for UST and have this function build the rest of the struct
@@ -90,14 +118,25 @@ fn main() {
         coupon: 0.04,
         frequency: 2.0,
         maturity: 10.0,
-        yield_to_maturity: 0.0, // we have to give some float to fill out the struct
-        //price: 951.25,
+        yield_to_maturity: 0.0, // we have to give some float to fill out the struct. can replce with an option
         price: 953.5723, 
+    };
+
+    let mut bond3 = SimpleBond {
+        face_value: 1000.0,
+        coupon: 0.1,
+        frequency: 2.0,
+        maturity: 30.0,
+        yield_to_maturity: 0.1, // we have to give some float to fill out the struct. can replce with an option
+        price: 1000.0, 
     };
 
     println!("10 year UST price on 5/2/2024: ${}", bond1.price());
     println!(
         "10 year UST YtM on 5/2/2024: {}",
-        bond2.yield_to_maturity(0.05, 100, 0.00001, 0.000000000001)
+        bond2.solve_yield_to_maturity(0.05, 100, 0.00001, 0.000000000001)
     );
+    println!("current yield: {}%", bond2.current_yield());
+    println!("duration of 10-yr is {} years", bond2.macauly_duration());
+    println!("duration of 30-yr par is {} years", bond3.macauly_duration());
 }
