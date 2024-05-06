@@ -9,7 +9,7 @@ pub struct SimpleBond {
 
 impl SimpleBond {
     // Need to refactor this function, to make the pv calcs more readable
-    pub fn price(&mut self) -> f32 {
+    pub fn solve_price(&mut self) -> f32 {
         let pv_principal: f32 = self.face_value
             / ((1.0 + (self.yield_to_maturity / self.frequency))
                 .powf(self.maturity * self.frequency));

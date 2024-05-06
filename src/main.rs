@@ -21,7 +21,7 @@ fn main() {
         frequency: 2.0,
         maturity: 10.0,
         yield_to_maturity: 0.04584,
-        price: 0.0,
+        price: 0.0, // we have to give some float to fill out the struct. can replace with an option
     };
 
     let mut bond2 = SimpleBond {
@@ -42,7 +42,7 @@ fn main() {
         price: 1000.0,
     };
 
-    println!("10 year UST price on 5/2/2024: ${}", bond1.price());
+    println!("10 year UST price on 5/2/2024: ${}", bond1.solve_price());
     println!(
         "10 year UST YtM on 5/2/2024: {}",
         bond2.solve_yield_to_maturity(0.05, 100, 0.00001, 0.000000000001)
