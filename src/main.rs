@@ -53,4 +53,8 @@ fn main() {
         "duration of 30-yr par is {} years",
         bond3.macauly_duration()
     );
+    println!(
+        "modified duration of 30-yr par is {} years",
+        bond3.modified_duration()
+    );
 }
